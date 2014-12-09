@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title><%= title %></title>
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+    <script src="/bower_components/jquery/dist/jquery.js" type="text/javascript"></script>
+    <script src="/javascripts/add_user.js" type="text/javascript"></script>
+</head>
+<body>
+<h1><%= title %></h1>
+<p>Welcome to <%= title %></p>
+<div>
+    <form id="add-user">
+        <input type="text" name="firstname" placeholder="First Name">
+        <input type="text" name="lastname" placeholder="Last Name">
+        <input type="text" name="address" placeholder="Address">
+        <button type="submit">Add User</button>
+    </form>
+</div>
+</body>
+</html>
