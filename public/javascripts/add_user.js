@@ -18,10 +18,22 @@ $(document).ready(function() {
         }).done(function(response) {
             // Success callback
             console.log('User created successfully', response);
-            // TODO some UI stuff to inform the user
+            $('#success').slideDown('slow', function() {
+                window.setTimeout(function() {
+                    $('#success').slideUp('slow');
+                }, 2000)
+            });
         }).fail(function(jqXHR, status, error) {
             // Error callback
             console.log('User creation FAILED:', jqXHR, status, error);
+            $('#error').html(jqXHR.responseJSON.message)
+            $('#error').slideDown('slow', function() {
+                window.setTimeout(function() {
+                    $('#error').slideUp('slow', function() {
+                        $('#error').html('');
+                    });
+                }, 2000)
+            });
         });
     });
 });

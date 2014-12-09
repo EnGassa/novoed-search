@@ -1,7 +1,8 @@
 "use strict";
 
 var https = require('https'),
-    querystring = require('querystring');
+    querystring = require('querystring'),
+    _ = require('underscore');
 
 module.exports = function(sequelize, DataTypes) {
     var User = sequelize.define("User", {
@@ -18,21 +19,19 @@ module.exports = function(sequelize, DataTypes) {
             },
             add: function(firstname, lastname, address, cb) {
                 // OpenStreetMap address search service
-                console.log('Attempting user creation:', firstname, lastname, address);
                 https.request({
                     host: 'nominatim.openstreetmap.org',
                     path: '/search?format=json&q=' + querystring.escape(address)
                 }, function(response) {
-                    debugger
-                    var information = '';
+                    var osmLocationInfo = '';
                     response.on('data', function(data) {
-                        information += data;
+                        osmLocationInfo += data;
                     });
                     response.on('end', function() {
-                        information = JSON.parse(information);
+                        osmLocationInfo = JSON.parse(osmLocationInfo);
 
-                        if (information.length == 0) {
-                            cb({
+                        if (osmLocationInfo.length == 0) {
+                            return cb({
                                 message: 'Address cannot be parsed'
                             });
                         }
@@ -40,20 +39,62 @@ module.exports = function(sequelize, DataTypes) {
                         var googleHost = 'maps.googleapis.com',
                             googleAPIKey = 'AIzaSyANcjt4_BXgoeWEGJT-_lvLzaLiPpcwKz8',
                             queryURL = '/maps/api/geocode/json?key=' + googleAPIKey +
-                                '&latlng=' + information[0].lat + ',' + information[0].lon;
+                                '&result_type=locality' +
+                                '&latlng=' +
+                                osmLocationInfo[0].lat + ',' + osmLocationInfo[0].lon;
+
                         // Google reverse geocode service
                         https.request({
                             host: googleHost,
                             path: queryURL
                         }, function(res) {
-                            debugger
-                            var incomingData = '';
+                            var gLocationData = '';
                             res.on('data', function(data) {
-                                incomingData += data;
+                                gLocationData += data;
                             });
 
                             res.on('end', function() {
-                                incomingData = JSON.parse(incomingData);
+                                gLocationData = JSON.parse(gLocationData);
+                                var gCountry = null,
+                                    gState = null,
+                                    gCity = null;
+                                try {
+                                    if(gLocationData['status'] == 'OK') {
+                                        gCountry = _.find(gLocationData['results'][0]['address_components'], function(addr) {
+                                            return _.contains(addr['types'], 'country');
+                                        });
+                                        gState = _.find(gLocationData['results'][0]['address_components'], function(addr) {
+                                            return _.contains(addr['types'], 'administrative_area_level_1');
+                                        });
+                                        gCity = _.find(gLocationData['results'][0]['address_components'], function(addr) {
+                                            return _.contains(addr['types'], 'locality');
+                                        });
+                                    } else {
+                                        throw "Location unparseable"
+                                    }
+                                } catch (err) {
+                                    return cb({
+                                        success: false,
+                                        message: err
+                                    });
+                                }
+
+                                User.create({
+                                    firstname: firstname,
+                                    lastname: lastname,
+                                    orig_address: address,
+                                    country: gCountry['long_name'],
+                                    state:gState['long_name'],
+                                    city: gCity['long_name']
+                                }).success(function(userCreated) {
+                                    cb(null, userCreated);
+                                }).error(function(error) {
+                                    cb({
+                                        success: false,
+                                        message: error
+                                    });
+                                });
+
                             });
                         }).end();
                     });
