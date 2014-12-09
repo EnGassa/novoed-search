@@ -4,11 +4,8 @@ var express = require('express'),
 
 /* GET users listing. */
 router.get('/', function(req, res) {
-    models.User.findAll({}).then(function (users) {
-        res.render('user_search', {
-            title: 'User Search',
-            users: users
-        });
+    res.render('user_search', {
+        title: 'User Search'
     });
 });
 
@@ -16,7 +13,24 @@ router.get('/', function(req, res) {
 router.get('/search', function(req, res) {
     if (!req.xhr)
         return res.status(403).send('Unauthorised');
-    // TODO Create REST API for user search
+    if (!req.param('searchTerm') || !req.param('mode'))
+        return res.status(400).send('Bad Request');
+
+    var searchMode = req.param('mode'),
+        searchTerm = req.param('searchTerm');
+    models.User.findAll({
+        where: searchMode + " LIKE '%" + searchTerm + "%'"
+    }).success(function(results) {
+        return res.status(200).json({
+            success: true,
+            results: results
+        });
+    }).error(function(err) {
+        return res.status(400).json({
+            success: false,
+            error: err
+        });
+    });
 });
 
 /* GET User add page */

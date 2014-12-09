@@ -4,6 +4,7 @@
     <title><%= title %></title>
     <link rel='stylesheet' href='/stylesheets/style.css' />
     <script src="/bower_components/jquery/dist/jquery.js" type="text/javascript"></script>
+    <script src="/bower_components/underscore/underscore-min.js" type="text/javascript"></script>
     <script src="/javascripts/user_search.js" type="text/javascript"></script>
 </head>
 <body>
@@ -12,8 +13,51 @@
 <div>
     <form id="search">
         <input type="text" id="search-text" placeholder="Search text..">
-        <button type="submit">Search</button>
+        <select id="search-mode">
+            <option value="country">Country</option>
+            <option value="state">State</option>
+            <option value="city">City</option>
+        </select>
+        <button id="search-submit">Search</button>
     </form>
+</div>
+<div>
+    <table id="search-results">
+        <thead>
+        <tr>
+            <th>
+                First Name
+            </th>
+            <th>
+                Last Name
+            </th>
+            <th>
+                City
+            </th>
+            <th>
+                State
+            </th>
+            <th>
+                Country
+            </th>
+        </tr>
+        </thead>
+
+        <tbody>
+            <tr class="result-template">
+                <td class="fname"></td>
+                <td class="lname"></td>
+                <td class="city"></td>
+                <td class="state"></td>
+                <td class="country"></td>
+            </tr>
+            <tr class="no-result hide">
+                <td colspan="0">
+                    No results
+                </td>
+            </tr>
+        </tbody>
+    </table>
 </div>
 </body>
 </html>
